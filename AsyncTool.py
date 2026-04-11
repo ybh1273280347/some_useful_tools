@@ -83,7 +83,7 @@ async def run_batch(tasks: List, batch_size: int = 100, limit: int = 10):
     """
     results = []
     for i in range(0, len(tasks), batch_size):
-        batch_tasks = tasks[i:i + batch_size]
+        batch_tasks = tasks[i : i + batch_size]
         batch_results = await gather_with_limit(batch_tasks, limit)
         results.extend(batch_results)
     return results
