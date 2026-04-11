@@ -4,9 +4,10 @@ Python 实用工具包
 包含各种实用工具模块：
 - AsyncTool: 异步任务管理工具
 - CodeGen: 代码生成工具
-- CodeQualityTool: 代码质量工具
+- ClassMode: 设计模式工具
 - FileTool: 文件操作工具
 - LoggingTool: 日志工具
+- CodeQuality: 代码质量工具
 """
 
 from .AsyncTool import (
@@ -17,8 +18,8 @@ from .AsyncTool import (
     run_with_timeout,
     wait_for_condition,
 )
+from .ClassMode import ObjectPool, RegistryFactory, Singleton
 from .CodeGen import auto_enum, enhanced_dataclass, retry
-from .CodeQualityTool import CodeQualityTool
 from .FileTool import (
     file_compress,
     file_copy,
@@ -54,6 +55,10 @@ __all__ = [
     "auto_enum",
     "enhanced_dataclass",
     "retry",
+    # ClassMode
+    "Singleton",
+    "ObjectPool",
+    "RegistryFactory",
     # FileTool
     "file_download",
     "file_download_batch",
@@ -74,6 +79,9 @@ __all__ = [
     "log_error",
     "log_event",
     "log_debug",
-    # CodeQualityTool
-    "CodeQualityTool",
 ]
+
+# CodeQuality 工具通过脚本方式使用，不通过模块导入
+# 运行方式: python CodeQuality/format_code.py
+#          python CodeQuality/run_tests.py
+#          python CodeQuality/check_code.py

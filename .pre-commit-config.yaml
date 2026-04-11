@@ -1,0 +1,27 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: format-code
+        name: Format code with isort and black
+        entry: python CodeQuality/format_code.py
+        language: system
+        files: \.py$
+        pass_filenames: false
+
+-   repo: local
+    hooks:
+    -   id: flake8-check
+        name: Check code quality with flake8
+        entry: python CodeQuality/check_code.py
+        language: system
+        files: \.py$
+        pass_filenames: false
+
+-   repo: local
+    hooks:
+    -   id: run-tests
+        name: Run tests with pytest
+        entry: python CodeQuality/run_tests.py
+        language: system
+        files: \.py$
+        pass_filenames: false

@@ -15,9 +15,10 @@
 
 ## 工具列表
 
-| 模块 | 功能描述 | 主要函数 |
+| 模块 | 功能描述 | 主要函数/类 |
 |------|----------|----------|
 | AsyncTool | 异步任务管理工具 | gather_with_limit, run_batch, run_with_timeout, run_in_processes, run_in_threads, wait_for_condition |
+| ClassMode | 设计模式工具集 | Singleton, ObjectPool, RegistryFactory |
 | CodeGen | 代码生成工具 | auto_enum, enhanced_dataclass, retry |
 | FileTool | 文件操作工具 | file_download, file_extract, file_read, file_write, file_copy, file_move, file_delete |
 | LoggingTool | 日志工具 | setup_logging_intercept, log_ok, log_fail, log_error, log_event, log_debug |
@@ -199,11 +200,104 @@ except Exception as e:
     log_error("数据库操作", e, db="users")
 ```
 
+### ClassMode - 设计模式工具集
+
+**功能**：提供常用的设计模式实现，包括单例模式、对象池模式和注册表工厂模式。
+
+**设计亮点**：
+- 提供经典设计模式的简洁实现，易于理解和使用
+- 基于 Python 语言特性实现，无需额外依赖
+- 支持上下文管理器，资源管理更安全
+- 自动注册机制，减少手动配置
+
+**技术优势**：
+- `Singleton` 使用 `__new__` 方法实现，线程安全且简洁
+- `ObjectPool` 支持最大容量限制，防止资源耗尽
+- `RegistryFactory` 使用 `__init_subclass__` 自动注册子类
+- 所有模式都有完整的文档字符串和使用示例
+
+**主要类**：
+- `Singleton`：单例模式，确保一个类只有一个实例
+- `ObjectPool`：对象池模式，管理对象的复用
+- `RegistryFactory`：注册表工厂模式，通过名称创建对象
+
+**示例 - 单例模式**：
+```python
+from ClassMode import Singleton
+
+class Config(Singleton):
+    def __init__(self):
+        self.database_url = "sqlite:///db.sqlite"
+        self.debug = False
+
+config1 = Config()
+config2 = Config()
+assert config1 is config2  # 同一个实例
+```
+
+**示例 - 对象池模式**：
+```python
+from ClassMode import ObjectPool
+
+class Connection:
+    def __init__(self):
+        print("创建连接")
+
+    def close(self):
+        print("关闭连接")
+
+class ConnectionPool(ObjectPool):
+    def _create(self):
+        return Connection()
+
+    def _destroy(self, obj):
+        obj.close()
+
+with ConnectionPool(max_size=5) as pool:
+    conn = pool.get()
+    # 使用连接...
+    pool.release(conn)
+```
+
+**示例 - 注册表工厂模式**：
+```python
+from ClassMode import RegistryFactory
+from abc import abstractmethod
+
+class BaseShape(RegistryFactory):
+    @abstractmethod
+    def area(self):
+        pass
+
+class Circle(BaseShape):
+    def __init__(self, radius):
+        self.radius = radius
+
+    def area(self):
+        return 3.14 * self.radius ** 2
+
+class Rectangle(BaseShape):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+
+# 通过名称创建对象
+circle = BaseShape.create("Circle", 5)
+print(f"圆的面积: {circle.area()}")
+
+rectangle = BaseShape.create("Rectangle", 3, 4)
+print(f"矩形的面积: {rectangle.area()}")
+```
+
 ## 项目结构
 
 ```
 PythonTools/
 ├── AsyncTool.py          # 异步工具
+├── ClassMode.py         # 设计模式工具
 ├── CodeGen.py           # 代码生成工具
 ├── FileTool.py          # 文件操作工具
 ├── LoggingTool.py       # 日志工具
