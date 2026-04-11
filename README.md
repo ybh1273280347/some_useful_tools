@@ -20,7 +20,7 @@
 | AsyncTool | 异步任务管理工具 | gather_with_limit, run_batch, run_with_timeout, run_in_processes, run_in_threads, wait_for_condition |
 | ClassMode | 设计模式工具集 | Singleton, ObjectPool, RegistryFactory |
 | CodeGen | 代码生成工具 | auto_enum, enhanced_dataclass, retry |
-| FileTool | 文件操作工具 | file_download, file_extract, file_read, file_write, file_copy, file_move, file_delete |
+| FileTool | 文件操作工具 | file_download, file_extract, file_read, file_write, file_copy, file_move, file_delete, file_rename |
 | LoggingTool | 日志工具 | setup_logging_intercept, log_ok, log_fail, log_error, log_event, log_debug |
 
 ## 安装
@@ -130,27 +130,32 @@ async def fetch_data(url):
 
 ### FileTool - 文件操作
 
-**功能**：提供下载、解压、读写、复制、移动、删除等文件操作。
+**功能**：提供下载、解压、压缩、查找、读写、复制、移动、删除、重命名等文件操作。
 
 **设计亮点**：
 - 提供一致的文件操作接口，简化文件处理
 - 支持异步下载，不阻塞主线程
 - 完善的异常处理机制，提供清晰的错误信息
 - 自动处理路径拼接和规范化，跨平台兼容
+- 支持单个文件重命名和目录批量正则重命名
 
 **技术优势**：
 - 使用 `httpx` 实现高效的异步下载
 - 支持多种压缩格式的解压（zip、tar.gz 等）
 - 文件操作函数名统一添加 `file_` 前缀，提高可读性
+- 支持正则表达式批量重命名文件
 
 **使用场景**：
 - 文件下载与解压
 - 配置文件读写
 - 批量文件处理
+- 文件批量重命名
 
 **示例**：
 ```python
-from FileTool import file_download, file_extract, file_read, file_write
+from FileTool import (
+    file_download, file_extract, file_read, file_write, file_rename
+)
 
 # 下载文件
 await file_download('https://example.com/file.zip', 'downloads/')
@@ -161,6 +166,16 @@ file_extract('downloads/file.zip', 'output/')
 # 读写文件
 content = file_read('config.json')
 file_write('output.txt', 'Hello World')
+
+# 单个文件重命名
+file_rename('old.txt', 'new.txt')
+
+# 目录批量重命名（正则替换）
+file_rename('photos/', pattern=r'img_(\d+)\.jpg', repl=r'photo_\1.jpg')
+
+# 使用函数替换
+file_rename('docs/', pattern=r'(\w+)\.md', 
+           repl=lambda m: m.group(1).upper() + '.md')
 ```
 
 ### LoggingTool - 日志工具

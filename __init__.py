@@ -31,6 +31,7 @@ from .FileTool import (
     file_find,
     file_move,
     file_read,
+    file_rename,
     file_size,
     file_write,
 )
@@ -72,6 +73,7 @@ __all__ = [
     "file_copy",
     "file_move",
     "file_delete",
+    "file_rename",
     # LoggingTool
     "setup_logging_intercept",
     "log_ok",

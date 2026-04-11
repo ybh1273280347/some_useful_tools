@@ -6,11 +6,13 @@
 
 import asyncio
 import gzip
+import re
 import shutil
 import tarfile
 import tempfile
 import zipfile
 from pathlib import Path
+from typing import Callable, Optional, Union
 from urllib.parse import urlparse
 
 import httpx
@@ -145,8 +147,8 @@ def file_extract(file_path, extract_to_dir=None):
         解压后的文件/目录路径
 
     Example:
-        >>> extract('downloads/file.zip')
-        >>> extract('downloads/file.tar.gz', 'output/')
+        >>> file_extract('downloads/file.zip')
+        >>> file_extract('downloads/file.tar.gz', 'output/')
     """
     file_path = Path(file_path)
     suffix = file_path.suffix
@@ -223,8 +225,8 @@ def file_find(dir, extensions=None, recursive=False):
         文件路径
 
     Example:
-        >>> list(find('src/', extensions=['.py']))
-        >>> list(find('src/', recursive=True))
+        >>> list(file_find('src/', extensions=['.py']))
+        >>> list(file_find('src/', recursive=True))
     """
     dir = Path(dir)
     if not dir.exists():
@@ -252,8 +254,8 @@ def file_read(path, default="", mode="text"):
         文件内容
 
     Example:
-        >>> content = read('config.json')
-        >>> data = read('data.bin', mode='bytes')
+        >>> content = file_read('config.json')
+        >>> data = file_read('data.bin', mode='bytes')
     """
     p = Path(path)
     if not p.exists():
@@ -278,8 +280,8 @@ def file_write(path, content, encoding="utf-8", mode="text"):
         写入的字节数
 
     Example:
-        >>> write('output.txt', 'Hello World')
-        >>> write('data.bin', b'\\x00\\x01', mode='bytes')
+        >>> file_write('output.txt', 'Hello World')
+        >>> file_write('data.bin', b'\\x00\\x01', mode='bytes')
     """
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -301,9 +303,9 @@ def file_size(path, human_readable=True):
         大小（字节或可读字符串）
 
     Example:
-        >>> size('downloads/')
+        >>> file_size('downloads/')
         '1.5 GB'
-        >>> size('file.txt', human_readable=False)
+        >>> file_size('file.txt', human_readable=False)
         1024
     """
     p = Path(path)
@@ -336,8 +338,8 @@ def file_compress(obj, output_file, fmt="zip"):
         压缩文件路径
 
     Example:
-        >>> compress('src/', 'src.zip')
-        >>> compress(['file1.txt', 'file2.txt'], 'files.tar.gz', fmt='tar.gz')
+        >>> file_compress('src/', 'src.zip')
+        >>> file_compress(['file1.txt', 'file2.txt'], 'files.tar.gz', fmt='tar.gz')
     """
     if fmt not in ("zip", "tgz", "tar.gz"):
         raise NotImplementedError(f"不支持 {fmt} 压缩，只支持 zip, tgz, tar.gz")
@@ -372,8 +374,8 @@ def file_copy(src, dst):
         目标文件/目录路径
 
     Example:
-        >>> copy('src.txt', 'dst.txt')
-        >>> copy('src_dir/', 'dst_dir/')
+        >>> file_copy('src.txt', 'dst.txt')
+        >>> file_copy('src_dir/', 'dst_dir/')
     """
     dst = Path(dst)
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -396,8 +398,8 @@ def file_move(src, dst):
         目标文件/目录路径
 
     Example:
-        >>> move('old.txt', 'new.txt')
-        >>> move('old_dir/', 'new_dir/')
+        >>> file_move('old.txt', 'new.txt')
+        >>> file_move('old_dir/', 'new_dir/')
     """
     dst = Path(dst)
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -413,9 +415,9 @@ def file_delete(obj):
         obj: 文件/目录路径或路径列表
 
     Example:
-        >>> delete('temp.txt')
-        >>> delete(['file1.txt', 'file2.txt'])
-        >>> delete('temp_dir/')
+        >>> file_delete('temp.txt')
+        >>> file_delete(['file1.txt', 'file2.txt'])
+        >>> file_delete('temp_dir/')
     """
     paths = [Path(f) for f in obj] if isinstance(obj, (list, tuple)) else [Path(obj)]
     for p in paths:
@@ -423,3 +425,57 @@ def file_delete(obj):
             p.unlink(missing_ok=True)
         elif p.is_dir():
             shutil.rmtree(p)
+
+
+def file_rename(
+    file_path,
+    new_name: Optional[str] = None,
+    pattern: Optional[str] = None,
+    repl: Union[None, str, Callable[[str], str]] = None,
+):
+    """
+    重命名文件或目录中的文件。
+
+    Args:
+        file_path: 文件路径或目录路径
+        new_name: 单个文件重命名时的新名称
+        pattern: 目录批量重命名时的正则表达式模式
+        repl: 目录批量重命名时的替换字符串或函数
+
+    Example:
+        >>> # 单个文件重命名
+        >>> file_rename('old.txt', 'new.txt')
+
+        >>> # 目录批量重命名（正则替换）
+        >>> file_rename('photos/', pattern='img_', repl='photo_')
+
+        >>> # 使用函数替换
+        >>> file_rename('docs/', pattern='hello',
+        ...            repl=lambda m: 'HELLO')
+    """
+    file_path = Path(file_path)
+    if not file_path.exists():
+        raise FileNotFoundError(file_path)
+
+    if file_path.is_file():
+        if new_name is None:
+            raise ValueError("new_name is required for single file rename")
+
+        new_path = file_path.parent / new_name
+        file_path.rename(new_path)
+        return new_path
+
+    if file_path.is_dir():
+        if pattern is None or repl is None:
+            raise ValueError("pattern and repl are required for batch rename")
+
+        renamed_count = 0
+        for file in file_path.iterdir():
+            if not file.is_file():
+                continue
+            new_name = re.sub(pattern, repl, file.name)
+            if new_name != file.name:
+                new_path = file.parent / new_name
+                file.rename(new_path)
+                renamed_count += 1
+        return renamed_count
